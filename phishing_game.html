@@ -1,0 +1,359 @@
+<title>Phishing Detective Agency</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#eef0f4; --panel:#ffffff; --panel-2:#f6f7fa; --ink:#1b2233; --muted:#5b6478;
+    --border:#d7dbe4; --accent:#b8860b; --accent-ink:#3a2c04; --danger:#c0392b; --danger-bg:#fbeae8;
+    --safe:#1e7145; --safe-bg:#e8f5ee; --shadow: 0 10px 30px -12px rgba(27,34,51,.25);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#10131c; --panel:#171b28; --panel-2:#1d2332; --ink:#e7e9f0; --muted:#929aad;
+      --border:#2a3040; --accent:#d4a017; --accent-ink:#2a1f02; --danger:#e5534b; --danger-bg:#3a1c1a;
+      --safe:#3ea06b; --safe-bg:#132a1f; --shadow: 0 10px 30px -12px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#10131c; --panel:#171b28; --panel-2:#1d2332; --ink:#e7e9f0; --muted:#929aad;
+    --border:#2a3040; --accent:#d4a017; --accent-ink:#2a1f02; --danger:#e5534b; --danger-bg:#3a1c1a;
+    --safe:#3ea06b; --safe-bg:#132a1f; --shadow: 0 10px 30px -12px rgba(0,0,0,.55);
+  }
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg); color:var(--ink); margin:0; padding:20px 16px calc(20px + env(safe-area-inset-bottom,0px));
+    font-family:'IBM Plex Sans', system-ui, sans-serif;
+  }
+  .wrap{max-width:1080px; margin:0 auto;}
+  h1,h2,h3{font-family:'Special Elite', 'IBM Plex Mono', monospace; letter-spacing:.02em; margin:0;}
+  header.top{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    padding-bottom:16px; margin-bottom:18px; border-bottom:3px double var(--border);
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .badge-icon{
+    width:44px; height:44px; border-radius:50%; background:var(--accent); color:var(--accent-ink);
+    display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;
+    box-shadow: var(--shadow);
+  }
+  .brand h1{font-size:22px; color:var(--ink);}
+  .brand p{margin:2px 0 0; font-size:12px; color:var(--muted); font-family:'IBM Plex Mono',monospace; text-transform:uppercase; letter-spacing:.08em;}
+  .score-pill{
+    font-family:'IBM Plex Mono',monospace; background:var(--panel); border:1px solid var(--border); border-radius:999px;
+    padding:8px 16px; font-size:14px; font-weight:600; box-shadow: var(--shadow);
+  }
+  .score-pill span{color:var(--accent);}
+
+  .layout{display:grid; grid-template-columns: 220px 1fr; gap:18px; align-items:start;}
+  @media (max-width:720px){ .layout{grid-template-columns:1fr;} }
+
+  .tabs{display:flex; flex-direction:column; gap:6px; position:sticky; top:16px;}
+  @media (max-width:720px){ .tabs{flex-direction:row; overflow-x:auto; position:static; padding-bottom:6px;} }
+  .tab{
+    display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; border:1px solid var(--border);
+    background:var(--panel); cursor:pointer; text-align:left; font-family:'IBM Plex Mono',monospace; font-size:13px;
+    color:var(--muted); flex-shrink:0; transition:border-color .15s, color .15s, background .15s;
+  }
+  .tab:hover{border-color:var(--accent);}
+  .tab.active{border-color:var(--accent); background:var(--panel-2); color:var(--ink); font-weight:600;}
+  .tab .num{font-weight:700;}
+  .tab .mark{margin-left:auto; font-size:14px;}
+  .tab.solved.correct .mark{color:var(--safe);}
+  .tab.solved.wrong .mark{color:var(--danger);}
+
+  .case{
+    background:var(--panel); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  .case-head{
+    display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:16px 20px;
+    border-bottom:1px dashed var(--border); background:var(--panel-2);
+  }
+  .case-head .label{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);}
+  .case-head .title{font-family:'Special Elite',monospace; font-size:18px; margin-top:4px;}
+  .stamp{
+    font-family:'Special Elite',monospace; font-size:12px; border:2px solid var(--accent); color:var(--accent);
+    padding:4px 10px; border-radius:4px; transform:rotate(-4deg); white-space:nowrap;
+  }
+
+  .email{padding:18px 20px;}
+  .row{display:flex; gap:10px; font-size:13px; padding:5px 0; border-bottom:1px solid var(--border);}
+  .row .k{width:64px; flex-shrink:0; color:var(--muted); font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.06em; padding-top:2px;}
+  .row .v{flex:1; word-break:break-word;}
+  .sender-name{font-weight:600;}
+  .sender-addr{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--muted);}
+  .subject{font-weight:600; font-size:15px;}
+  .body-text{padding:16px 0 4px; font-size:14px; line-height:1.6;}
+  .link-btn{
+    display:inline-block; margin:10px 0; padding:9px 16px; background:#2a6fdb; color:#fff; border-radius:5px;
+    font-size:13px; font-weight:600; cursor:pointer; border:none; font-family:inherit;
+  }
+  .url-peek{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--muted); background:var(--panel-2);
+    border:1px solid var(--border); border-radius:5px; padding:7px 10px; margin-top:6px; display:none; word-break:break-all;
+  }
+  .url-peek.show{display:block;}
+  .url-peek b{color:var(--ink);}
+
+  .verdict{
+    display:flex; gap:10px; padding:16px 20px; border-top:1px solid var(--border); flex-wrap:wrap;
+  }
+  .vbtn{
+    flex:1; min-width:150px; padding:13px 14px; border-radius:8px; border:1.5px solid var(--border);
+    background:var(--panel); font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:13.5px;
+    cursor:pointer; color:var(--ink); transition:transform .1s, border-color .15s;
+  }
+  .vbtn:hover:not(:disabled){border-color:var(--accent); transform:translateY(-1px);}
+  .vbtn:disabled{opacity:.5; cursor:default;}
+  .vbtn.phish{color:var(--danger);}
+  .vbtn.legit{color:var(--safe);}
+
+  .feedback{margin:0 20px 20px; border-radius:8px; padding:14px 16px; font-size:13.5px; line-height:1.6; display:none;}
+  .feedback.show{display:block;}
+  .feedback.correct{background:var(--safe-bg); border:1px solid var(--safe); color:var(--ink);}
+  .feedback.wrong{background:var(--danger-bg); border:1px solid var(--danger); color:var(--ink);}
+  .feedback .verdict-line{font-weight:700; font-family:'IBM Plex Mono',monospace; margin-bottom:8px; display:flex; gap:8px; align-items:center;}
+  .feedback ul{margin:6px 0 0; padding-left:20px;}
+  .feedback li{margin-bottom:4px;}
+  .next-btn{
+    margin-top:12px; padding:8px 14px; border-radius:6px; border:1px solid var(--ink); background:var(--ink);
+    color:var(--panel); font-weight:600; font-size:13px; cursor:pointer; font-family:'IBM Plex Sans',sans-serif;
+  }
+
+  .results{
+    background:var(--panel); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow);
+    padding:32px 24px; text-align:center;
+  }
+  .results h2{font-size:26px;}
+  .results .big-score{font-size:52px; font-family:'IBM Plex Mono',monospace; font-weight:700; color:var(--accent); margin:14px 0 4px;}
+  .results .grade{font-family:'IBM Plex Mono',monospace; color:var(--muted); font-size:13px; text-transform:uppercase; letter-spacing:.08em;}
+  .results .tip{max-width:480px; margin:18px auto 0; font-size:14px; color:var(--muted); line-height:1.6;}
+  .replay-btn{
+    margin-top:20px; padding:11px 22px; border-radius:8px; border:none; background:var(--accent); color:var(--accent-ink);
+    font-weight:700; font-family:'IBM Plex Mono',monospace; cursor:pointer; font-size:13.5px;
+  }
+  [hidden]{display:none!important;}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="badge-icon">🕵️</div>
+      <div>
+        <h1>Phishing Detective Agency</h1>
+        <p>ICD2O · Case Review Unit</p>
+      </div>
+    </div>
+    <div class="score-pill">Score <span id="scoreVal">0</span> / 8 · Case <span id="caseVal">1</span> of 8</div>
+  </header>
+
+  <div class="layout" id="gameView">
+    <nav class="tabs" id="tabs"></nav>
+    <div id="caseHolder"></div>
+  </div>
+
+  <div class="results" id="resultsView" hidden>
+    <p style="font-family:'IBM Plex Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-size:12px;">Case Closed</p>
+    <h2>Final Report</h2>
+    <div class="big-score" id="finalScore">0/8</div>
+    <div class="grade" id="finalGrade">Rookie Detective</div>
+    <p class="tip" id="finalTip"></p>
+    <button class="replay-btn" onclick="restart()">Reopen the Files</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var CASES = [
+    {
+      sender:"IT Support Team", addr:"UmAlQura-IT-Support@umalquraa-cloud.net",
+      subject:"URGENT: Your school account will be suspended in 24 hours",
+      body:"Dear User,\n\nOur system detected unusual activity on your school Google account. To avoid permanent suspension, verify your login immediately.",
+      linkText:"VERIFY MY ACCOUNT NOW", url:"http://umalquraa-cloud.net/verify-login.php?id=8827",
+      answer:"phish",
+      flags:["Sender domain is <b>umalquraa-cloud.net</b> — not the school's real domain, just close enough to fool a fast reader.","Manufactured urgency (\"24 hours\", \"suspended\") to stop you from thinking it through.","Generic greeting (\"Dear User\") instead of your actual name.","The link uses <b>http://</b>, not https, and points to a <b>.php</b> login page — a classic credential-harvesting pattern."]
+    },
+    {
+      sender:"Um Al-Qura Front Office", addr:"office@umalquraschool.ca",
+      subject:"Reminder: Report cards go home this Friday",
+      body:"Hi families,\n\nJust a reminder that report cards will be sent home with students this Friday. No action is needed — please reach out to your child's homeroom teacher with any questions.",
+      linkText:null, url:null,
+      answer:"legit",
+      flags:["Sender domain matches the school's real domain — no lookalike spelling.","No urgency, no threat, and no link to click at all.","Addressed to a real audience (\"families\") for a routine, expected school event.","Nothing is being asked of you — legitimate notices rarely demand instant action."]
+    },
+    {
+      sender:"Amazon Rewards", addr:"rewards-team@amaz0n-prizecenter.com",
+      subject:"CONGRATULATIONS!! You have WON a $500 Gift Card",
+      body:"You have been randomly selected to receive a $500 Amazon Gift Card! Click below within the next 10 minutes to claim your prize before it expires.",
+      linkText:"CLAIM MY $500 NOW", url:"http://amaz0n-prizecenter.com/claim?winner=true",
+      answer:"phish",
+      flags:["\"amaz0n\" uses a zero instead of the letter O — a classic lookalike domain trick.","You can't win a contest you never entered.","A 10-minute countdown is designed to short-circuit careful thinking.","Excess punctuation and all-caps (\"CONGRATULATIONS!!\") are a common low-effort spam signal."]
+    },
+    {
+      sender:"Netflix", addr:"billing@netflix-update-center.info",
+      subject:"Your payment method has expired",
+      body:"We were unable to process your last payment. Update your billing details within 48 hours to avoid interruption to your account.",
+      linkText:"Update Payment Info", url:"http://netflix-update-center.info/billing",
+      answer:"phish",
+      flags:["Real Netflix emails come from <b>netflix.com</b>, not a <b>.info</b> domain with \"update-center\" bolted on.","Payment/billing scares are one of the most common phishing themes — they push you toward entering card details fast.","A countdown (\"48 hours\") again pressures quick action over careful checking.","Hovering the link shows a destination that has nothing to do with netflix.com."]
+    },
+    {
+      sender:"Mr. Khalid — Vice Principal", addr:"m.khalid.vp@umalqurah-admin.com",
+      subject:"Quick favour before my meeting",
+      body:"Hi, I'm heading into back-to-back meetings and need a favour. Can you pick up 3 gift cards from the store for a staff appreciation thing and send me the codes? I'll pay you back after school. Don't mention it to anyone else yet, want it to be a surprise.",
+      linkText:null, url:null,
+      answer:"phish",
+      flags:["Domain is <b>umalqurah-admin.com</b>, not the real school domain — spoofing a staff member's name and title, not their real address.","Classic \"gift card scam\": asking a subordinate to buy gift cards and send the codes directly.","Manufactured urgency + authority (\"before my meeting\", \"quick favour\") pressures you not to double-check.","\"Don't mention it to anyone\" is a major red flag — legitimate requests don't ask for secrecy."]
+    },
+    {
+      sender:"Spotify", addr:"no-reply@spotify.com",
+      subject:"Your Wrapped 2026 is ready",
+      body:"Your year in music is here. See your top artists, songs, and minutes listened in your personalized Spotify Wrapped.",
+      linkText:"See My Wrapped", url:"https://open.spotify.com/wrapped",
+      answer:"legit",
+      flags:["Sender address matches Spotify's real domain (<b>spotify.com</b>) exactly.","Link goes to <b>open.spotify.com</b> — a real Spotify subdomain, not a lookalike.","No urgency, no request for login details or payment info.","This matches Spotify's real, expected annual marketing campaign."]
+    },
+    {
+      sender:"Canada Post", addr:"tracking@canadapost-redelivery.net",
+      subject:"Delivery failed — action required to reschedule",
+      body:"We attempted to deliver your package today but were unable to complete delivery. A small redelivery fee is required to reschedule your shipment.",
+      linkText:"Pay Redelivery Fee", url:"http://canadapost-redelivery.net/reschedule?track=CA9928817",
+      answer:"phish",
+      flags:["Real Canada Post uses <b>canadapost-postescanada.ca</b>, not a <b>.net</b> lookalike domain.","Canada Post does not charge a \"redelivery fee\" through an email link — this is designed to harvest card details.","You likely weren't expecting a package — a vague, generic delivery notice targets anyone, hoping someone is.","No real tracking number format or account reference, just a generic \"action required\" hook."]
+    },
+    {
+      sender:"Google", addr:"no-reply@accounts.google.com",
+      subject:"Security alert: new sign-in on Windows",
+      body:"We noticed a new sign-in to your Google Account on a Windows device. If this was you, you don't need to do anything. If not, we recommend you secure your account immediately.",
+      linkText:"Check Activity", url:"https://myaccount.google.com/notifications",
+      answer:"legit",
+      flags:["Sender is the real <b>accounts.google.com</b> domain — this is Google's actual automated security-alert system.","Link points to <b>myaccount.google.com</b>, Google's real account-management domain.","The message explicitly says \"if this was you, you don't need to do anything\" — no forced urgency.","Real security alerts like this do exist — the lesson is to check the domain, not to treat every alert as fake."]
+    }
+  ];
+
+  var state = { idx:0, answers:new Array(CASES.length).fill(null) };
+
+  var tabsEl = document.getElementById('tabs');
+  var holder = document.getElementById('caseHolder');
+  var gameView = document.getElementById('gameView');
+  var resultsView = document.getElementById('resultsView');
+
+  function scoreCount(){ return state.answers.filter(function(a){return a && a.correct;}).length; }
+
+  function renderTabs(){
+    tabsEl.innerHTML = '';
+    CASES.forEach(function(c, i){
+      var a = state.answers[i];
+      var btn = document.createElement('button');
+      btn.className = 'tab' + (i===state.idx?' active':'') + (a?' solved '+(a.correct?'correct':'wrong'):'');
+      btn.innerHTML = '<span class="num">#'+(i+1)+'</span><span>'+c.sender+'</span><span class="mark">'+(a?(a.correct?'✓':'✗'):'')+'</span>';
+      btn.onclick = function(){ state.idx = i; render(); };
+      tabsEl.appendChild(btn);
+    });
+  }
+
+  function renderCase(){
+    var i = state.idx, c = CASES[i], a = state.answers[i];
+    var html = '';
+    html += '<div class="case">';
+    html += '<div class="case-head"><div><div class="label">Case File #'+(i+1)+' of '+CASES.length+'</div><div class="title">'+c.subject+'</div></div>';
+    if(a) html += '<div class="stamp" style="border-color:'+(a.correct?'var(--safe)':'var(--danger)')+';color:'+(a.correct?'var(--safe)':'var(--danger)')+';">'+(a.correct?'SOLVED':'MISSED')+'</div>';
+    html += '</div>';
+    html += '<div class="email">';
+    html += '<div class="row"><div class="k">From</div><div class="v"><div class="sender-name">'+c.sender+'</div><div class="sender-addr">&lt;'+c.addr+'&gt;</div></div></div>';
+    html += '<div class="row"><div class="k">Subject</div><div class="v subject">'+c.subject+'</div></div>';
+    html += '<div class="body-text">'+c.body.replace(/\n/g,'<br>')+'</div>';
+    if(c.linkText){
+      html += '<button class="link-btn" type="button" onclick="peekUrl('+i+')">'+c.linkText+'</button>';
+      html += '<div class="url-peek" id="peek'+i+'">Actual destination: <b>'+c.url+'</b></div>';
+    }
+    html += '</div>';
+    html += '<div class="verdict">';
+    html += '<button class="vbtn phish" '+(a?'disabled':'')+' onclick="answer('+i+',\'phish\')">🚩 Flag as Phishing</button>';
+    html += '<button class="vbtn legit" '+(a?'disabled':'')+' onclick="answer('+i+',\'legit\')">✅ Mark Legitimate</button>';
+    html += '</div>';
+    html += '<div class="feedback'+(a?' show '+(a.correct?'correct':'wrong'):'')+'" id="fb'+i+'">';
+    if(a){
+      html += '<div class="verdict-line">'+(a.correct?'✓ Correct.':'✗ Not quite.')+' This case was <b>'+(c.answer==='phish'?'a phishing attempt':'legitimate')+'</b></div>';
+      html += '<ul>' + c.flags.map(function(f){return '<li>'+f+'</li>';}).join('') + '</ul>';
+      html += '<button class="next-btn" onclick="nextCase()">'+(i<CASES.length-1?'Next Case →':'See Final Report →')+'</button>';
+    }
+    html += '</div>';
+    html += '</div>';
+    holder.innerHTML = html;
+  }
+
+  window.peekUrl = function(i){
+    var el = document.getElementById('peek'+i);
+    if(el) el.classList.toggle('show');
+  };
+
+  window.answer = function(i, choice){
+    var c = CASES[i];
+    state.answers[i] = { choice:choice, correct: choice===c.answer };
+    render();
+  };
+
+  window.nextCase = function(){
+    if(state.idx < CASES.length-1){ state.idx++; render(); }
+    else { showResults(); }
+  };
+
+  function render(){
+    document.getElementById('scoreVal').textContent = scoreCount();
+    document.getElementById('caseVal').textContent = state.idx+1;
+    renderTabs();
+    renderCase();
+    try{ saveProgress(); }catch(e){}
+  }
+
+  function showResults(){
+    gameView.hidden = true;
+    resultsView.hidden = false;
+    var s = scoreCount();
+    document.getElementById('finalScore').textContent = s + '/' + CASES.length;
+    var grade, tip;
+    if(s===8){ grade='Master Detective'; tip='Perfect case file. You caught every spoofed domain, every fake urgency trick, and every fake-authority request — and you correctly trusted the two real alerts instead of flagging everything as suspicious.'; }
+    else if(s>=6){ grade='Senior Detective'; tip='Strong work. Go back over the cases marked ✗ in the sidebar and reread the red flags list — look especially closely at the sender address on each one.'; }
+    else if(s>=4){ grade='Field Detective'; tip='You\'re catching the obvious ones. The trickiest cases usually hide in the sender address, not the message body — always check the actual domain, not just the display name.'; }
+    else { grade='Rookie Detective'; tip='Reopen the files and reread each address carefully. The two fastest checks are: (1) does the domain exactly match the real one, and (2) is the message pressuring you to act immediately?'; }
+    document.getElementById('finalGrade').textContent = grade;
+    document.getElementById('finalTip').textContent = tip;
+  }
+
+  window.restart = function(){
+    state = { idx:0, answers:new Array(CASES.length).fill(null) };
+    gameView.hidden = false;
+    resultsView.hidden = true;
+    render();
+  };
+
+  function saveProgress(){
+    localStorage.setItem('phishingDetectiveProgress', JSON.stringify(state));
+  }
+  function loadProgress(){
+    try{
+      var raw = localStorage.getItem('phishingDetectiveProgress');
+      if(raw){
+        var parsed = JSON.parse(raw);
+        if(parsed && Array.isArray(parsed.answers) && parsed.answers.length===CASES.length){ state = parsed; }
+      }
+    }catch(e){}
+  }
+
+  function boot(data){
+    if(data && data.state) state = data.state;
+    else loadProgress();
+    if(state.answers.every(function(a){return a;})){ showResults(); }
+    render();
+  }
+
+  if(window.claude && window.claude.hot){
+    window.claude.hot.snapshot(function(){ return { state:state }; });
+    window.claude.hot.ready ? window.claude.hot.ready(boot) : boot(window.claude.hot.data);
+  } else {
+    boot();
+  }
+})();
+</script>
